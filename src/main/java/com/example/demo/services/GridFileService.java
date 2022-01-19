@@ -50,6 +50,7 @@ public class GridFileService {
 	}
 	
 	public String store(MultipartFile document) {
+		
         InputStream in = null;
         try {
             in = document.getInputStream();
@@ -61,9 +62,26 @@ public class GridFileService {
 
         BasicDBObject basicDBObject = new BasicDBObject();
         basicDBObject.put("store-id", "N/A");
+        basicDBObject.put("ejemplo", "aaaaa");
+        
         String documentFrontID = gridFsTemplate.store(in, fileName, contenType, basicDBObject).toString();
 
         return documentFrontID;
     }
+	
+	
+	public boolean deleteById(String id) {
+		
+		GridFSFileDTO gridFSFileDTO = this.findById(id);
+		
+		if(gridFSFileDTO == null) {
+			return false;
+		}
+		
+		gridFsTemplate.delete(new Query(Criteria.where("_id").is(id)));
+		
+		return true;
+	}
+	
 
 }

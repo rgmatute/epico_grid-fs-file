@@ -12,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.example.demo.entity.Store;
 import com.example.demo.repository.StoreRepository;
 import com.example.demo.services.dto.GridFSFileDTO;
+import com.example.demo.services.dto.ResourceResponse;
 import com.example.demo.util.Utils;
 
 @Service
@@ -69,7 +70,45 @@ public class SubirFicheroService {
 				.header("Content-Disposition", "attachment; filename="+gridFSFileDTO.getName())
 				.body(fileBytes);
 		
+	}
+	
+	public ResourceResponse view(String id) {
+		
+		ResourceResponse response = new ResourceResponse();
+		
+		Optional<Store> storOptional = storeRepository.findById(id);
+		
+		if(storOptional.isEmpty()) {
+			response.setStatus(404);
+			response.setMessage("El recurso que buscas no existe.");
+			return response;
+		}
+		
+		Store store = storOptional.get();
+		
+		GridFSFileDTO resource = gridFileService.findById(store.getResourceId());
+		
+		response.setStatus(200);
+		response.setContentDisposition("attachment; filename=" + resource.getName());
+		response.setContentType(resource.getContentType());
+		response.setBody(Base64.getDecoder().decode(resource.getFile().getBytes()));
+		
+		return response;
 		
 	}
+	
+	public void delete(String id) {
+		Optional<Store> storOptional = storeRepository.findById(id);
+		
+		if(storOptional.isPresent()) {
+			Store store = storOptional.get();
+			
+			if(gridFileService.deleteById(store.getResourceId())) {
+				storeRepository.deleteById(id);
+			}
+			
+		}
+	}
+
 
 }
